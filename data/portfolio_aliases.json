@@ -1,0 +1,98 @@
+{
+  "fx_to_cny": {
+    "CNY": 1.0,
+    "HKD": 0.916,
+    "USD": 7.15
+  },
+  "aliases": {
+    "腾讯": {
+      "symbol": "0700.HK",
+      "quote": "hk00700",
+      "market": "港股",
+      "category": "科技互联网",
+      "tags": ["互联网平台", "社交网络", "游戏", "广告", "现金流"]
+    },
+    "BRKB": {
+      "symbol": "BRK-B",
+      "quote": "usBRK.B",
+      "market": "美股",
+      "category": "传统事业",
+      "tags": ["伯克希尔", "保险", "多元控股", "价值投资", "防守"]
+    },
+    "茅台": {
+      "symbol": "600519.SH",
+      "quote": "sh600519",
+      "market": "A股",
+      "category": "消费",
+      "tags": ["白酒", "高端消费", "品牌护城河", "分红", "低增长现金牛"]
+    },
+    "NVDA": {
+      "symbol": "NVDA",
+      "quote": "usNVDA",
+      "market": "美股",
+      "category": "AI算力",
+      "tags": ["AI芯片", "GPU", "CUDA", "高景气", "高估值"]
+    },
+    "QQQ": {
+      "symbol": "QQQ",
+      "quote": "usQQQ",
+      "market": "美股",
+      "category": "指数ETF",
+      "tags": ["纳指100", "科技成长", "美元资产", "ETF"]
+    },
+    "spcx": {
+      "symbol": "SPCX",
+      "quote": "usSPCX",
+      "market": "美股",
+      "category": "高风险个股",
+      "tags": ["SpaceX", "航天", "新股", "高估值", "高波动"]
+    },
+    "理想汽车-w": {
+      "symbol": "2015.HK",
+      "quote": "hk02015",
+      "market": "港股",
+      "category": "新能源汽车",
+      "tags": ["新能源车", "汽车", "周期成长", "高竞争"]
+    },
+    "美团-w": {
+      "symbol": "3690.HK",
+      "quote": "hk03690",
+      "market": "港股",
+      "category": "本地生活",
+      "tags": ["互联网平台", "外卖", "本地生活", "补贴战", "高竞争"]
+    },
+    "医疗ETF": {
+      "symbol": "512170.SH",
+      "quote": "sh512170",
+      "market": "A股",
+      "category": "医疗",
+      "tags": ["医疗", "ETF", "医疗服务", "防守成长"]
+    },
+    "医药ETF": {
+      "symbol": "159938.SZ",
+      "quote": "sz159938",
+      "market": "A股",
+      "category": "医药",
+      "tags": ["医药", "ETF", "全指医药卫生", "防守成长"]
+    },
+    "红利etf": {
+      "symbol": "515450.SH",
+      "quote": "sh515450",
+      "market": "A股",
+      "category": "红利",
+      "tags": ["红利", "ETF", "低估值", "高股息"]
+    },
+    "医疗基金": {
+      "symbol": "012323",
+      "market": "A股",
+      "category": "医疗",
+      "tags": ["医疗", "ETF联接C", "512170联接", "场外基金"]
+    },
+    "s计划": {
+      "symbol": "",
+      "market": "A股",
+      "category": "综合基金",
+      "tags": ["综合基金", "计划类资产", "待确认代码"]
+    }
+  }
+}

@@ -30,5 +30,9 @@ reports/美团/command-log.jsonl
 
 # 组合报告只存本地，不公开
 reports/portfolio-latest.md
+reports/portfolio-review-*.md
+reports/持仓分析-*.md
+data/portfolio/holdings_*.csv
+data/portfolio/monitor_state.json
 
 # 实盘记录/ 公开权重口径版；原始账本（含股数/金额）在 local/实盘记录-原始/（已被 /local/ 规则覆盖）

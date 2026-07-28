@@ -1,0 +1,265 @@
+{
+  "data_cutoff": "2026-07-28",
+  "purpose": "价格只负责触发复核，不直接触发交易。",
+  "portfolio_gates": [
+    "任何买入后，投资账户现金比例仍应不低于8%；正常目标为10%。",
+    "贵州茅台在组合权重降到35%以下前不加仓。",
+    "中国经济相关权益降到75%以下前，腾讯和其他中国权益只观察、不加仓。",
+    "触发后先确认基本面否决条件，再决定是否使用一档25%的计划额度。"
+  ],
+  "watchlist": [
+    {
+      "name": "Alphabet",
+      "symbol": "GOOGL",
+      "quote_code": "usGOOGL",
+      "currency": "USD",
+      "gate": "优先作为降低中国资产集中度的新仓；单次只使用计划额度的25%。",
+      "price_levels": [
+        {
+          "id": "googl_300",
+          "label": "一级复核",
+          "at_or_below": 300,
+          "action": "复核搜索收入、Cloud利润率和AI资本开支回报；论文完整才考虑第一笔。"
+        },
+        {
+          "id": "googl_280",
+          "label": "二级买入候选",
+          "at_or_below": 280,
+          "action": "若正常化PE约18倍以内且搜索未衰退，可考虑第二笔。"
+        },
+        {
+          "id": "googl_250",
+          "label": "深度机会",
+          "at_or_below": 250,
+          "action": "重新估值并检查监管结果；无结构性破坏时再考虑第三笔。"
+        }
+      ],
+      "drawdown_levels": [
+        {
+          "id": "googl_dd15",
+          "label": "回撤复核",
+          "at_or_above_pct": 15,
+          "action": "检查回撤是估值压缩还是搜索/AI论文变化。"
+        },
+        {
+          "id": "googl_dd25",
+          "label": "显著回撤",
+          "at_or_above_pct": 25,
+          "action": "结合最新财报重做三情景估值。"
+        }
+      ]
+    },
+    {
+      "name": "伯克希尔B",
+      "symbol": "BRK-B",
+      "quote_code": "usBRK.B",
+      "quote_symbol": "BRK-B",
+      "currency": "USD",
+      "gate": "现有仓位约10%，总仓位建议控制在15%以内。",
+      "price_levels": [
+        {
+          "id": "brkb_470",
+          "label": "一级复核",
+          "at_or_below": 470,
+          "action": "对应此前510美元公允价值约8%折价，只考虑小额第一笔。"
+        },
+        {
+          "id": "brkb_440",
+          "label": "二级买入候选",
+          "at_or_below": 440,
+          "action": "约14%折价，复核保险承保、现金配置和回购后考虑第二笔。"
+        },
+        {
+          "id": "brkb_410",
+          "label": "深度机会",
+          "at_or_below": 410,
+          "action": "约20%折价，若账面价值与经营利润未恶化可重点复核。"
+        }
+      ],
+      "drawdown_levels": [
+        {
+          "id": "brkb_dd12",
+          "label": "回撤复核",
+          "at_or_above_pct": 12,
+          "action": "检查保险损失、权益持仓和接班后的资本配置。"
+        },
+        {
+          "id": "brkb_dd20",
+          "label": "显著回撤",
+          "at_or_above_pct": 20,
+          "action": "重做每股内在价值和回购阈值评估。"
+        }
+      ]
+    },
+    {
+      "name": "纳指100 ETF",
+      "symbol": "QQQ",
+      "quote_code": "usQQQ",
+      "currency": "USD",
+      "gate": "与NVDA合并计算科技仓；两者新增仓位合计不超过组合10%。",
+      "price_levels": [
+        {
+          "id": "qqq_650",
+          "label": "一级复核",
+          "at_or_below": 650,
+          "action": "估值仍可能偏高，只考虑第一笔。"
+        },
+        {
+          "id": "qqq_600",
+          "label": "二级买入候选",
+          "at_or_below": 600,
+          "action": "检查指数前十大权重盈利预期后考虑第二笔。"
+        },
+        {
+          "id": "qqq_550",
+          "label": "深度机会",
+          "at_or_below": 550,
+          "action": "若盈利预期未同步下修，可考虑第三笔。"
+        }
+      ],
+      "drawdown_levels": [
+        {
+          "id": "qqq_dd10",
+          "label": "市场回撤第一档",
+          "at_or_above_pct": 10,
+          "action": "可使用计划额度的25%，但保留现金底线。"
+        },
+        {
+          "id": "qqq_dd15",
+          "label": "市场回撤第二档",
+          "at_or_above_pct": 15,
+          "action": "可再使用计划额度的25%。"
+        },
+        {
+          "id": "qqq_dd20",
+          "label": "市场回撤第三档",
+          "at_or_above_pct": 20,
+          "action": "先检查盈利衰退幅度，再决定第三笔。"
+        }
+      ]
+    },
+    {
+      "name": "英伟达",
+      "symbol": "NVDA",
+      "quote_code": "usNVDA",
+      "currency": "USD",
+      "gate": "只作为QQQ内已有暴露的卫星仓，新增后个股权重不超过4%。",
+      "price_levels": [
+        {
+          "id": "nvda_180",
+          "label": "一级复核",
+          "at_or_below": 180,
+          "action": "复核数据中心增速、毛利率和客户资本开支后再考虑第一笔。"
+        },
+        {
+          "id": "nvda_165",
+          "label": "二级买入候选",
+          "at_or_below": 165,
+          "action": "若增长放缓仍支持合理PEG，可考虑第二笔。"
+        },
+        {
+          "id": "nvda_150",
+          "label": "深度机会",
+          "at_or_below": 150,
+          "action": "检查ASIC竞争和出口限制，论文完整才考虑第三笔。"
+        }
+      ],
+      "drawdown_levels": [
+        {
+          "id": "nvda_dd20",
+          "label": "高波动回撤复核",
+          "at_or_above_pct": 20,
+          "action": "高波动本身不是便宜，必须同步复核盈利预期。"
+        },
+        {
+          "id": "nvda_dd30",
+          "label": "显著回撤",
+          "at_or_above_pct": 30,
+          "action": "重做AI资本开支与三情景估值。"
+        }
+      ]
+    },
+    {
+      "name": "腾讯控股",
+      "symbol": "0700.HK",
+      "quote_code": "hk00700",
+      "currency": "HKD",
+      "gate": "当前中国权益暴露过高；价格触发仅提醒复核，降到75%以下前不执行加仓。",
+      "price_levels": [
+        {
+          "id": "tencent_420",
+          "label": "一级观察",
+          "at_or_below": 420,
+          "action": "复核AI投入、广告增速和回购，不因价格单独加仓。"
+        },
+        {
+          "id": "tencent_380",
+          "label": "二级价值区",
+          "at_or_below": 380,
+          "action": "若非IFRS利润与自由现金流稳定，组合降集中后再考虑。"
+        },
+        {
+          "id": "tencent_340",
+          "label": "深度机会",
+          "at_or_below": 340,
+          "action": "排除监管或业务结构性变化后重做估值。"
+        }
+      ],
+      "drawdown_levels": [
+        {
+          "id": "tencent_dd20",
+          "label": "显著回撤",
+          "at_or_above_pct": 20,
+          "action": "判断是市场风险还是AI投入回报恶化。"
+        },
+        {
+          "id": "tencent_dd30",
+          "label": "深度回撤",
+          "at_or_above_pct": 30,
+          "action": "结合最新财报和监管变化重新评估。"
+        }
+      ]
+    },
+    {
+      "name": "贵州茅台",
+      "symbol": "600519.SS",
+      "quote_code": "sh600519",
+      "currency": "CNY",
+      "gate": "当前组合权重约40%；即使触发价格，也必须等权重低于35%才考虑加仓。",
+      "price_levels": [
+        {
+          "id": "moutai_1200",
+          "label": "一级观察",
+          "at_or_below": 1200,
+          "action": "检查飞天批价、渠道库存和分红率，只观察不加仓。"
+        },
+        {
+          "id": "moutai_1100",
+          "label": "二级价值区",
+          "at_or_below": 1100,
+          "action": "对应更高安全边际，但仍需服从35%单仓上限。"
+        },
+        {
+          "id": "moutai_1000",
+          "label": "深度机会",
+          "at_or_below": 1000,
+          "action": "若批价与利润未结构性恶化，待组合约束满足后再评估。"
+        }
+      ],
+      "drawdown_levels": [
+        {
+          "id": "moutai_dd15",
+          "label": "回撤复核",
+          "at_or_above_pct": 15,
+          "action": "重点核查批价和渠道库存，而不是只看PE。"
+        },
+        {
+          "id": "moutai_dd25",
+          "label": "显著回撤",
+          "at_or_above_pct": 25,
+          "action": "重做低增长和消费税压力情景。"
+        }
+      ]
+    }
+  ]
+}
