@@ -374,6 +374,31 @@ REM 可选：安装 Codex slash prompts
 /prompts:investment-research 腾讯
 ```
 
+### 4. 运行组合观察器
+
+观察器只负责触发复核，不会下单。先查看行动观察池和研究候选池：
+
+```bash
+python3 tools/portfolio_monitor.py list
+```
+
+拉取价格并检查价格档与 52 周回撤：
+
+```bash
+python3 tools/portfolio_monitor.py check --show-all
+```
+
+QDII 溢价率、申购状态、指数 PE 等二级指标可通过本地 JSON 注入：
+
+```bash
+cp data/portfolio/metrics.example.json /tmp/portfolio-metrics.json
+python3 tools/portfolio_monitor.py check \
+  --metrics-file /tmp/portfolio-metrics.json \
+  --show-all
+```
+
+指标闸门会显示为“通过”“阻止”或“待补”。公共行情请求会发送观察标的代码；不希望发送代码时，可使用 `--prices-file` 提供本地行情快照。
+
 ---
 
 ## 各 Skill 详细介绍

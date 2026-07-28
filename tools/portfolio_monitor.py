@@ -9,6 +9,8 @@ Examples:
   python3 tools/portfolio_monitor.py check --show-all
   python3 tools/portfolio_monitor.py check --repeat-active
   python3 tools/portfolio_monitor.py check --prices-file /tmp/prices.json
+  python3 tools/portfolio_monitor.py check --metrics-file /tmp/metrics.json
+  python3 tools/portfolio_monitor.py list
 """
 
 from __future__ import annotations
@@ -218,6 +220,20 @@ def load_price_overrides(path: str) -> dict[str, Snapshot]:
     return snapshots
 
 
+def load_metric_overrides(path: str | None) -> dict[str, dict[str, Any]]:
+    if not path:
+        return {}
+    raw = load_json(path)
+    if not isinstance(raw, dict):
+        raise ValueError("metrics file must contain an object keyed by symbol")
+    metrics = {}
+    for symbol, values in raw.items():
+        if not isinstance(values, dict):
+            raise ValueError(f"metrics for {symbol} must be an object")
+        metrics[symbol] = values
+    return metrics
+
+
 def snapshots_from_state(state: dict[str, Any]) -> dict[str, Snapshot]:
     snapshots: dict[str, Snapshot] = {}
     for symbol, item in state.get("symbols", {}).items():
@@ -280,6 +296,96 @@ def compact_level(level: dict[str, Any] | None) -> dict[str, Any] | None:
     return {"id": level["id"], "severity": level["severity"]}
 
 
+def compare_metric(actual: Any, operator: str, expected: Any) -> bool:
+    if isinstance(expected, bool):
+        if not isinstance(actual, bool):
+            raise ValueError(f"expected boolean metric, got {actual!r}")
+        left, right = actual, expected
+    elif operator in {"==", "!="} and isinstance(expected, str):
+        left, right = str(actual), expected
+    else:
+        left, right = decimal(actual), decimal(expected)
+
+    operations = {
+        "<=": lambda: left <= right,
+        "<": lambda: left < right,
+        ">=": lambda: left >= right,
+        ">": lambda: left > right,
+        "==": lambda: left == right,
+        "!=": lambda: left != right,
+    }
+    if operator not in operations:
+        raise ValueError(f"unsupported metric operator: {operator}")
+    return operations[operator]()
+
+
+def metric_gate_status(
+    item: dict[str, Any],
+    metrics: dict[str, Any] | None,
+) -> dict[str, Any]:
+    groups = item.get("metric_gate_groups", [])
+    if not groups:
+        return {"status": "not_required", "details": []}
+
+    values = metrics or {}
+    group_statuses = []
+    details = []
+    for group in groups:
+        mode = group.get("mode", "all")
+        if mode not in {"all", "any"}:
+            raise ValueError(f"unsupported metric gate mode: {mode}")
+        check_statuses = []
+        for check in group.get("checks", []):
+            metric = check["metric"]
+            label = check.get(
+                "label",
+                f"{metric} {check['operator']} {check['value']}",
+            )
+            if metric not in values:
+                check_statuses.append("unknown")
+                details.append(f"{label}: 待补")
+                continue
+            try:
+                passed = compare_metric(
+                    values[metric],
+                    check["operator"],
+                    check["value"],
+                )
+            except (TypeError, ValueError) as exc:
+                check_statuses.append("unknown")
+                details.append(f"{label}: 数据错误({exc})")
+                continue
+            check_statuses.append("passed" if passed else "blocked")
+            details.append(
+                f"{label}: {'通过' if passed else '不通过'}"
+                f"(实际 {values[metric]})"
+            )
+
+        if not check_statuses:
+            group_statuses.append("unknown")
+        elif mode == "all":
+            if "blocked" in check_statuses:
+                group_statuses.append("blocked")
+            elif all(status == "passed" for status in check_statuses):
+                group_statuses.append("passed")
+            else:
+                group_statuses.append("unknown")
+        elif "passed" in check_statuses:
+            group_statuses.append("passed")
+        elif all(status == "blocked" for status in check_statuses):
+            group_statuses.append("blocked")
+        else:
+            group_statuses.append("unknown")
+
+    if "blocked" in group_statuses:
+        status = "blocked"
+    elif group_statuses and all(value == "passed" for value in group_statuses):
+        status = "passed"
+    else:
+        status = "unknown"
+    return {"status": status, "details": details}
+
+
 def money(value: Decimal) -> str:
     return f"{value.quantize(Decimal('0.01')):,.2f}"
 
@@ -289,6 +395,7 @@ def evaluate(
     snapshots: dict[str, Snapshot],
     previous_state: dict[str, Any],
     repeat_active: bool,
+    metrics: dict[str, dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     alerts: list[dict[str, Any]] = []
     rows: list[dict[str, Any]] = []
@@ -303,6 +410,7 @@ def evaluate(
         snapshot = snapshots[symbol]
         price_level = active_price_level(item, snapshot.price)
         drawdown_level = active_drawdown_level(item, snapshot.drawdown_pct)
+        metric_gate = metric_gate_status(item, (metrics or {}).get(symbol))
         old = old_symbols.get(symbol, {})
 
         if is_new_or_deeper(price_level, old.get("price_level"), repeat_active):
@@ -314,6 +422,7 @@ def evaluate(
                     "snapshot": snapshot,
                     "level": price_level,
                     "gate": item.get("gate", ""),
+                    "metric_gate": metric_gate,
                 }
             )
         if is_new_or_deeper(drawdown_level, old.get("drawdown_level"), repeat_active):
@@ -325,6 +434,7 @@ def evaluate(
                     "snapshot": snapshot,
                     "level": drawdown_level,
                     "gate": item.get("gate", ""),
+                    "metric_gate": metric_gate,
                 }
             )
 
@@ -344,6 +454,7 @@ def evaluate(
                 "snapshot": snapshot,
                 "price_level": price_level,
                 "drawdown_level": drawdown_level,
+                "metric_gate": metric_gate,
             }
         )
     return alerts, rows, next_state
@@ -363,22 +474,40 @@ def render_alert(alert: dict[str, Any]) -> str:
     )
     if alert["gate"]:
         line += f" 组合约束：{alert['gate']}"
+    metric_gate = alert.get("metric_gate", {})
+    status = metric_gate.get("status")
+    if status in {"passed", "blocked", "unknown"}:
+        labels = {
+            "passed": "通过",
+            "blocked": "阻止",
+            "unknown": "待补数据",
+        }
+        details = "；".join(metric_gate.get("details", []))
+        line += f" 数据闸门：{labels[status]}"
+        if details:
+            line += f"（{details}）"
     return line
 
 
 def render_dashboard(rows: list[dict[str, Any]]) -> list[str]:
     lines = [
         "",
-        "| 标的 | 当前价 | 52周高点 | 回撤 | 当前价格档 | 当前回撤档 |",
-        "|---|---:|---:|---:|---|---|",
+        "| 标的 | 当前价 | 52周高点 | 回撤 | 当前价格档 | 当前回撤档 | 数据闸门 |",
+        "|---|---:|---:|---:|---|---|---|",
     ]
+    gate_labels = {
+        "not_required": "-",
+        "passed": "通过",
+        "blocked": "阻止",
+        "unknown": "待补",
+    }
     for row in rows:
         snapshot = row["snapshot"]
         price_level = row["price_level"]
         drawdown_level = row["drawdown_level"]
         lines.append(
             "| {name} | {price} {currency} | {high} | {drawdown:.1f}% | "
-            "{price_band} | {drawdown_band} |".format(
+            "{price_band} | {drawdown_band} | {metric_gate} |".format(
                 name=row["name"],
                 price=money(snapshot.price),
                 currency=snapshot.currency,
@@ -386,6 +515,7 @@ def render_dashboard(rows: list[dict[str, Any]]) -> list[str]:
                 drawdown=snapshot.drawdown_pct,
                 price_band=price_level["label"] if price_level else "-",
                 drawdown_band=drawdown_level["label"] if drawdown_level else "-",
+                metric_gate=gate_labels[row["metric_gate"]["status"]],
             )
         )
     return lines
@@ -395,6 +525,7 @@ def command_check(args: argparse.Namespace) -> int:
     config = load_json(args.config)
     previous_state = load_json(args.state, default={"symbols": {}})
     overrides = load_price_overrides(args.prices_file) if args.prices_file else {}
+    metrics = load_metric_overrides(args.metrics_file)
     cached = snapshots_from_state(previous_state)
     snapshots: dict[str, Snapshot] = dict(overrides)
     errors: list[str] = []
@@ -448,6 +579,7 @@ def command_check(args: argparse.Namespace) -> int:
         snapshots,
         previous_state,
         repeat_active=args.repeat_active,
+        metrics=metrics,
     )
 
     if not args.no_state and rows:
@@ -483,6 +615,37 @@ def command_check(args: argparse.Namespace) -> int:
     return 1 if not rows else 0
 
 
+def command_list(args: argparse.Namespace) -> int:
+    config = load_json(args.config)
+    method = config.get("selection_method", {})
+    print(f"筛选方法：{method.get('name', '未配置')}")
+    if method.get("scope_note"):
+        print(f"口径：{method['scope_note']}")
+
+    print("\n行动观察池：")
+    print("| 标的 | 代码 | 币种 | 价格档 | 回撤档 | 指标闸门 |")
+    print("|---|---|---|---:|---:|---|")
+    for item in config.get("watchlist", []):
+        print(
+            f"| {item['name']} | {item['symbol']} | {item.get('currency', '-')} | "
+            f"{len(item.get('price_levels', []))} | "
+            f"{len(item.get('drawdown_levels', []))} | "
+            f"{'有' if item.get('metric_gate_groups') else '-'} |"
+        )
+
+    research_pool = config.get("research_pool", [])
+    if research_pool:
+        print("\n研究候选池（不触发价格告警）：")
+        print("| 标的 | 代码 | 角色 | 状态 |")
+        print("|---|---|---|---|")
+        for item in research_pool:
+            print(
+                f"| {item['name']} | {item['symbol']} | "
+                f"{item.get('role', '-')} | {item.get('status', '-')} |"
+            )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Monitor investment trigger levels.")
     subparsers = parser.add_subparsers(dest="command")
@@ -490,9 +653,18 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("--config", default=DEFAULT_CONFIG)
     check.add_argument("--state", default=DEFAULT_STATE)
     check.add_argument("--prices-file", help="Optional offline snapshot JSON.")
+    check.add_argument(
+        "--metrics-file",
+        help="Optional JSON metrics keyed by symbol, such as ETF premium or PE.",
+    )
     check.add_argument("--show-all", action="store_true")
     check.add_argument("--repeat-active", action="store_true")
     check.add_argument("--no-state", action="store_true")
+    list_command = subparsers.add_parser(
+        "list",
+        help="Show action and research watchlists without fetching prices.",
+    )
+    list_command.add_argument("--config", default=DEFAULT_CONFIG)
     return parser
 
 
@@ -503,6 +675,8 @@ def main() -> int:
         if args.command is None:
             args = parser.parse_args(["check"])
         return command_check(args)
+    if args.command == "list":
+        return command_list(args)
     parser.error(f"unknown command: {args.command}")
     return 2
 

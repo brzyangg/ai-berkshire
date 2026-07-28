@@ -6,6 +6,7 @@ from tools.portfolio_monitor import (
     active_drawdown_level,
     active_price_level,
     evaluate,
+    metric_gate_status,
     parse_tencent_line,
 )
 
@@ -99,6 +100,97 @@ class PortfolioMonitorTest(unittest.TestCase):
         _, _, state = evaluate(config, {"EX": first}, {}, False)
         alerts, _, _ = evaluate(config, {"EX": deeper}, state, False)
         self.assertEqual({alert["level"]["id"] for alert in alerts}, {"p2", "d2"})
+
+    def test_all_metric_gate_passes_and_blocks(self):
+        item = {
+            "metric_gate_groups": [
+                {
+                    "mode": "all",
+                    "checks": [
+                        {
+                            "metric": "premium_pct",
+                            "operator": "<=",
+                            "value": 1,
+                            "label": "premium",
+                        },
+                        {
+                            "metric": "subscription_open",
+                            "operator": "==",
+                            "value": True,
+                            "label": "subscription",
+                        },
+                    ],
+                }
+            ]
+        }
+        passed = metric_gate_status(
+            item,
+            {"premium_pct": 0.5, "subscription_open": True},
+        )
+        blocked = metric_gate_status(
+            item,
+            {"premium_pct": 2.5, "subscription_open": True},
+        )
+        self.assertEqual(passed["status"], "passed")
+        self.assertEqual(blocked["status"], "blocked")
+
+    def test_any_metric_gate_handles_missing_values(self):
+        item = {
+            "metric_gate_groups": [
+                {
+                    "mode": "any",
+                    "checks": [
+                        {"metric": "pe", "operator": "<=", "value": 12},
+                        {
+                            "metric": "valuation_percentile",
+                            "operator": "<=",
+                            "value": 30,
+                        },
+                    ],
+                }
+            ]
+        }
+        passed = metric_gate_status(item, {"pe": 11.5})
+        unknown = metric_gate_status(item, {})
+        blocked = metric_gate_status(
+            item,
+            {"pe": 14, "valuation_percentile": 80},
+        )
+        self.assertEqual(passed["status"], "passed")
+        self.assertEqual(unknown["status"], "unknown")
+        self.assertEqual(blocked["status"], "blocked")
+
+    def test_evaluate_attaches_metric_gate_to_alert(self):
+        item = dict(
+            ITEM,
+            metric_gate_groups=[
+                {
+                    "mode": "all",
+                    "checks": [
+                        {"metric": "premium_pct", "operator": "<=", "value": 1}
+                    ],
+                }
+            ],
+        )
+        snapshot = Snapshot(
+            price=Decimal("90"),
+            high_52w=Decimal("100"),
+            currency="USD",
+            as_of="2026-07-28",
+            source="test",
+        )
+        config = {"watchlist": [item]}
+        alerts, _, _ = evaluate(
+            config,
+            {"EX": snapshot},
+            {},
+            False,
+            metrics={"EX": {"premium_pct": 2}},
+        )
+        self.assertTrue(alerts)
+        self.assertTrue(
+            all(alert["metric_gate"]["status"] == "blocked" for alert in alerts)
+        )
 
 
 if __name__ == "__main__":

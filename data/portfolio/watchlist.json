@@ -2,12 +2,225 @@
   "data_cutoff": "2026-07-28",
   "purpose": "价格只负责触发复核，不直接触发交易。",
   "portfolio_gates": [
-    "任何买入后，投资账户现金比例仍应不低于8%；正常目标为10%。",
+    "任何人民币买入后，人民币现金与货币ETF合计仍应不低于40000元。",
+    "任何买入后，全组合现金类比例仍应不低于10%。",
     "贵州茅台在组合权重降到35%以下前不加仓。",
-    "中国经济相关权益降到75%以下前，腾讯和其他中国权益只观察、不加仓。",
+    "中国经济相关权益降到70%以下前，腾讯和宁德时代只观察、不加仓。",
+    "QDII ETF溢价率高于1%时不买，超过2%或暂停申购时直接跳过。",
     "触发后先确认基本面否决条件，再决定是否使用一档25%的计划额度。"
   ],
+  "selection_method": {
+    "name": "组合缺口优先的价值投资漏斗",
+    "scope_note": "当前行动观察池来自现有持仓、已完成研究和组合缺口，不是一次全市场量化选股结果。",
+    "score_weights": {
+      "portfolio_complementarity": 25,
+      "business_quality_and_moat": 25,
+      "financial_quality": 20,
+      "valuation_and_expected_return": 20,
+      "execution_and_liquidity": 10
+    },
+    "hard_filters": [
+      "ROE通常高于15%或近三年明确改善；重资产和金融行业按行业特征调整。",
+      "经营现金流为正且通常不低于净利润的70%。",
+      "资产负债率通常低于60%；银行、公用事业等行业按行业特征调整。",
+      "护城河至少三星，且能说明五年后仍然存在的证据。",
+      "正常情景预期回报必须明显高于对应币种现金收益。",
+      "不得与现有重仓形成没有补偿的重复暴露。"
+    ],
+    "vetoes": [
+      "管理层诚信、审计或治理存在重大红旗。",
+      "买入后突破单仓、主题、地域或现金底线。",
+      "只有价格信号，没有可验证的基本面论文。",
+      "数据不足以给出估值区间和论文失效条件。"
+    ],
+    "promotion_rule": "综合分至少75分、无否决项，并完成研究报告、买入区间、基本面闸门、最大仓位和资金来源后，才从研究候选池进入行动观察池。"
+  },
+  "research_pool": [
+    {
+      "name": "美的集团",
+      "symbol": "000333.SZ",
+      "role": "全球化制造与消费耐用品",
+      "why_research": "补充茅台之外的全球制造和现金流资产；当前只完成初筛，尚未形成正式买入区间。",
+      "key_checks": [
+        "海外自主品牌和ToB业务能否持续增长",
+        "现金流、回购和分红质量",
+        "与中国消费和红利ETF的真实重合度"
+      ],
+      "status": "待完整漏斗和公司研究，不进入价格告警"
+    },
+    {
+      "name": "长江电力",
+      "symbol": "600900.SS",
+      "role": "防御型公用事业",
+      "why_research": "盈利驱动与消费、医疗和科技不同，可降低组合利润周期相关性。",
+      "key_checks": [
+        "23至25元安全边际区间",
+        "股息率超过4%",
+        "来水、电价和资本开支"
+      ],
+      "source_report": "reports/Yangtze-Power/长江电力投资研究报告-20260627.md",
+      "status": "研究已完成，当前价格未进入行动区"
+    },
+    {
+      "name": "招商银行",
+      "symbol": "600036.SS",
+      "role": "优质金融与财富管理",
+      "why_research": "估值与现金回报有吸引力，但需先确认红利ETF的银行穿透仓位，避免重复。",
+      "key_checks": [
+        "33至35元价格区间",
+        "净息差连续两个季度企稳",
+        "财富管理收入恢复增长",
+        "红利ETF银行权重"
+      ],
+      "source_report": "reports/招商银行/招商银行-research-20260706.md",
+      "status": "研究已完成，等待组合重合度复核"
+    },
+    {
+      "name": "台积电",
+      "symbol": "TSM",
+      "role": "全球半导体制造基础设施",
+      "why_research": "属于美元池候选，不使用当前人民币；与NVDA和QQQ的AI资本开支暴露需要合并计算。",
+      "key_checks": [
+        "台股价格低于NT$2000",
+        "ADS溢价回归合理水平",
+        "先进节点份额和毛利率",
+        "组合AI主题总权重"
+      ],
+      "source_report": "reports/台积电/台积电投资研究报告-20260728.md",
+      "status": "研究已完成，保留在美元研究池"
+    }
+  ],
   "watchlist": [
+    {
+      "name": "标普500 ETF（人民币）",
+      "symbol": "513500.SS",
+      "quote_code": "sh513500",
+      "currency": "CNY",
+      "gate": "只在溢价率不高于1%时考虑；本监控器不自动核验IOPV，告警后必须人工检查。",
+      "metric_gate_groups": [
+        {
+          "mode": "all",
+          "checks": [
+            {
+              "metric": "premium_pct",
+              "operator": "<=",
+              "value": 1,
+              "label": "ETF溢价率 <= 1%"
+            },
+            {
+              "metric": "subscription_open",
+              "operator": "==",
+              "value": true,
+              "label": "申购状态开放"
+            }
+          ]
+        }
+      ],
+      "price_levels": [],
+      "drawdown_levels": [
+        {
+          "id": "sp500_cny_dd10",
+          "label": "市场回撤第一档",
+          "at_or_above_pct": 10,
+          "action": "核对实时IOPV、溢价率和申购状态；全部通过才考虑5000元第一笔。"
+        },
+        {
+          "id": "sp500_cny_dd15",
+          "label": "市场回撤第二档",
+          "at_or_above_pct": 15,
+          "action": "溢价率不高于1%且跟踪正常时，可复核第二笔。"
+        },
+        {
+          "id": "sp500_cny_dd20",
+          "label": "市场回撤第三档",
+          "at_or_above_pct": 20,
+          "action": "先排除基金异常溢价，再决定是否使用第三笔。"
+        }
+      ]
+    },
+    {
+      "name": "宁德时代",
+      "symbol": "300750.SZ",
+      "quote_code": "sz300750",
+      "currency": "CNY",
+      "source_report": "reports/宁德时代投资研究报告_20260728.md",
+      "gate": "买100股前人民币现金类至少73000元；首仓不超过组合5%。",
+      "price_levels": [
+        {
+          "id": "catl_330",
+          "label": "谨慎可买区",
+          "at_or_below": 330,
+          "action": "复核动力与储能毛利率、客户份额和海外政策；论文完整才考虑100股。"
+        },
+        {
+          "id": "catl_280",
+          "label": "较好安全边际",
+          "at_or_below": 280,
+          "action": "重做TTM估值；无结构性恶化时才考虑第二档。"
+        }
+      ],
+      "drawdown_levels": [
+        {
+          "id": "catl_dd20",
+          "label": "回撤复核",
+          "at_or_above_pct": 20,
+          "action": "检查价格战、储能毛利率和海外限制是否造成盈利下修。"
+        },
+        {
+          "id": "catl_dd30",
+          "label": "显著回撤",
+          "at_or_above_pct": 30,
+          "action": "结合最新财报重做三情景估值。"
+        }
+      ]
+    },
+    {
+      "name": "沪深300 ETF",
+      "symbol": "510300.SS",
+      "quote_code": "sh510300",
+      "currency": "CNY",
+      "gate": "只有指数PE不高于12倍或十年估值分位不高于30%时才考虑；监控器不自动核验估值。",
+      "metric_gate_groups": [
+        {
+          "mode": "any",
+          "checks": [
+            {
+              "metric": "pe",
+              "operator": "<=",
+              "value": 12,
+              "label": "指数PE <= 12x"
+            },
+            {
+              "metric": "valuation_percentile",
+              "operator": "<=",
+              "value": 30,
+              "label": "十年估值分位 <= 30%"
+            }
+          ]
+        }
+      ],
+      "price_levels": [],
+      "drawdown_levels": [
+        {
+          "id": "csi300_dd15",
+          "label": "估值复核",
+          "at_or_above_pct": 15,
+          "action": "核对指数PE和估值分位；条件满足才考虑5000至10000元。"
+        },
+        {
+          "id": "csi300_dd20",
+          "label": "显著回撤",
+          "at_or_above_pct": 20,
+          "action": "若盈利预期未同步大幅下降，进入第二档复核。"
+        },
+        {
+          "id": "csi300_dd25",
+          "label": "深度回撤",
+          "at_or_above_pct": 25,
+          "action": "重估指数盈利和行业权重后再决定第三笔。"
+        }
+      ]
+    },
     {
       "name": "Alphabet",
       "symbol": "GOOGL",
@@ -184,24 +397,24 @@
       "symbol": "0700.HK",
       "quote_code": "hk00700",
       "currency": "HKD",
-      "gate": "当前中国权益暴露过高；价格触发仅提醒复核，降到75%以下前不执行加仓。",
+      "gate": "买100股前人民币现金类至少75000元；买后腾讯总权重不超过18%。",
       "price_levels": [
         {
-          "id": "tencent_420",
-          "label": "一级观察",
-          "at_or_below": 420,
+          "id": "tencent_430",
+          "label": "一级复核",
+          "at_or_below": 430,
           "action": "复核AI投入、广告增速和回购，不因价格单独加仓。"
         },
         {
-          "id": "tencent_380",
-          "label": "二级价值区",
-          "at_or_below": 380,
-          "action": "若非IFRS利润与自由现金流稳定，组合降集中后再考虑。"
+          "id": "tencent_400",
+          "label": "一手买入候选",
+          "at_or_below": 400,
+          "action": "若非IFRS利润与自由现金流稳定，且人民币现金闸门满足，可考虑港股通100股。"
         },
         {
-          "id": "tencent_340",
+          "id": "tencent_380",
           "label": "深度机会",
-          "at_or_below": 340,
+          "at_or_below": 380,
           "action": "排除监管或业务结构性变化后重做估值。"
         }
       ],
