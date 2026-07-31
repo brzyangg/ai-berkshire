@@ -388,7 +388,18 @@ python3 tools/portfolio_monitor.py list
 python3 tools/portfolio_monitor.py check --show-all
 ```
 
-QDII 溢价率、申购状态、指数 PE 等二级指标可通过本地 JSON 注入：
+对 A 股和 A 股 ETF，观察器使用腾讯与东方财富两个独立行情源核验当前价，
+并分别从两边的**不复权日 K 盘中高价**重算滚动 52 周高点。证券身份、数据日
+或高点数值冲突时，该标的显示数据错误并停止告警计算；没有双源验证标记的旧
+缓存也不会作为触发依据。`--show-all` 会显示行情来源和时间。
+
+观察器会按 `watchlist.json` 中的 `metric_source` 自动补充指数 PE、十年
+估值分位、QDII 最新公布净值和申购状态。QDII 溢价率是用场内价格相对
+最新公布净值计算的估算值，实际交易前仍应核对实时 IOPV。
+
+自动来源会显示数据日并检查新鲜度；短暂抓取失败时使用仍在有效期内的
+上次缓存，过期数据不会作为交易闸门。需要纠正或离线运行时，可通过本地
+JSON 覆盖指标：
 
 ```bash
 cp data/portfolio/metrics.example.json /tmp/portfolio-metrics.json
@@ -397,7 +408,11 @@ python3 tools/portfolio_monitor.py check \
   --show-all
 ```
 
-指标闸门会显示为“通过”“阻止”或“待补”。公共行情请求会发送观察标的代码；不希望发送代码时，可使用 `--prices-file` 提供本地行情快照。
+完全禁止自动抓取二级指标时使用 `--no-auto-metrics`。“指标核验”会显示
+为“已满足”“未满足”或具体的数据问题。“数据不可用/缺少”表示自动来源
+失败、过期或未配置，不表示“待补仓”。`metrics.example.json` 仅演示覆盖
+格式，不是实时数据。公共行情请求会发送观察标的代码；不希望发送代码时，
+可同时使用 `--prices-file` 和 `--no-auto-metrics`。
 
 ---
 

@@ -42,7 +42,18 @@
 3. 近期重大事件
 4. 分析师一致预期（前瞻PE、目标价）
 
-对每个持仓使用 `tools/financial_rigor.py verify-valuation` 校验估值数据。对每只持仓标注信息丰富度（A/B/C级），C级持仓的分析结论标注低置信度。
+本步骤必须先按 `skills/financial-data.md` 定义指标契约并执行数据准入：
+
+1. 证券代码、交易所、share class、币种、数据日必须明确
+2. 当前价、历史高低点、估值和关键财务数字必须使用两个独立来源
+3. 每个关键数字标记 `VERIFIED` / `STALE` / `CONFLICT` / `MISSING`
+4. `STALE`、`CONFLICT`、`MISSING` 不得用于计算调仓金额或触发买卖建议
+5. 已安装 `public-equity-investing` 时，用 `financials-normalizer` 整理来源台账、
+   `model-audit-tieout` 审计模型勾稽、`portfolio-risk-management` 形成组合建议
+
+对每个持仓使用 `tools/financial_rigor.py verify-valuation` 校验估值数据。对每只
+持仓标注信息丰富度（A/B/C级），C级持仓的分析结论标注低置信度。如果关键数据
+未达到 `VERIFIED`，结论必须写成“条件性观察”，不得给出精确交易数量。
 
 ### 第三步：单仓位体检
 
@@ -176,6 +187,7 @@
 将组合信息写入 `reports/portfolio-latest.md`，包含：
 - 最新持仓表
 - 本次审视日期和结论
+- 关键数据来源台账、口径和核验状态
 - 调仓记录（追加）
 - 下次审视提醒
 

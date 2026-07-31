@@ -88,6 +88,38 @@
       "category": "医疗",
       "tags": ["医疗", "ETF联接C", "512170联接", "场外基金"]
     },
+    "货币ETF": {
+      "symbol": "511950.SH",
+      "quote": "sh511950",
+      "market": "A股",
+      "category": "现金管理",
+      "tags": ["货币ETF", "场内现金管理", "低波动", "流动性"]
+    },
+    "SGOV": {
+      "symbol": "SGOV",
+      "quote": "usSGOV",
+      "market": "美股",
+      "category": "现金管理",
+      "tags": ["短期美债", "美元现金管理", "ETF", "利率"]
+    },
+    "人民币": {
+      "currency": "CNY",
+      "market": "现金",
+      "category": "现金",
+      "tags": ["现金", "人民币"]
+    },
+    "港币": {
+      "currency": "HKD",
+      "market": "现金",
+      "category": "现金",
+      "tags": ["现金", "港币"]
+    },
+    "美金": {
+      "currency": "USD",
+      "market": "现金",
+      "category": "现金",
+      "tags": ["现金", "美元"]
+    },
     "s计划": {
       "symbol": "",
       "market": "A股",

@@ -1,5 +1,5 @@
 {
-  "data_cutoff": "2026-07-28",
+  "data_cutoff": "2026-07-30",
   "purpose": "价格只负责触发复核，不直接触发交易。",
   "portfolio_gates": [
     "任何人民币买入后，人民币现金与货币ETF合计仍应不低于40000元。",
@@ -96,7 +96,19 @@
       "symbol": "513500.SS",
       "quote_code": "sh513500",
       "currency": "CNY",
-      "gate": "只在溢价率不高于1%时考虑；本监控器不自动核验IOPV，告警后必须人工检查。",
+      "benchmark": {
+        "name": "SPY基准",
+        "symbol": "SPY",
+        "quote_code": "usSPY",
+        "currency": "USD"
+      },
+      "metric_source": {
+        "type": "fund_nav",
+        "name": "新浪基金",
+        "url": "https://finance.sina.com.cn/fund/quotes/513500/bc.shtml",
+        "max_age_days": 5
+      },
+      "gate": "只在相对最新公布净值的估算溢价率不高于1%时考虑；交易前仍须核对实时IOPV。",
       "metric_gate_groups": [
         {
           "mode": "all",
@@ -122,7 +134,7 @@
           "id": "sp500_cny_dd10",
           "label": "市场回撤第一档",
           "at_or_above_pct": 10,
-          "action": "核对实时IOPV、溢价率和申购状态；全部通过才考虑5000元第一笔。"
+          "action": "SPY基准回撤达到10%后，核对实时IOPV、溢价率和申购状态；全部通过才考虑5000元第一笔。"
         },
         {
           "id": "sp500_cny_dd15",
@@ -135,6 +147,59 @@
           "label": "市场回撤第三档",
           "at_or_above_pct": 20,
           "action": "先排除基金异常溢价，再决定是否使用第三笔。"
+        }
+      ]
+    },
+    {
+      "name": "中证500 ETF",
+      "symbol": "510500.SS",
+      "quote_code": "sh510500",
+      "currency": "CNY",
+      "metric_source": {
+        "type": "index_valuation",
+        "name": "百分位",
+        "url": "https://baifenwei.com/index/zz500/",
+        "max_age_days": 5
+      },
+      "gate": "只有指数PE不高于28倍或十年估值分位不高于35%时才考虑；回撤不等于低估。",
+      "metric_gate_groups": [
+        {
+          "mode": "any",
+          "checks": [
+            {
+              "metric": "pe",
+              "operator": "<=",
+              "value": 28,
+              "label": "指数PE <= 28x"
+            },
+            {
+              "metric": "valuation_percentile",
+              "operator": "<=",
+              "value": 35,
+              "label": "十年估值分位 <= 35%"
+            }
+          ]
+        }
+      ],
+      "price_levels": [],
+      "drawdown_levels": [
+        {
+          "id": "csi500_dd20",
+          "label": "估值复核",
+          "at_or_above_pct": 20,
+          "action": "核对指数PE、盈利趋势和估值分位；条件满足才考虑5000元第一笔。"
+        },
+        {
+          "id": "csi500_dd25",
+          "label": "显著回撤",
+          "at_or_above_pct": 25,
+          "action": "若盈利预期未继续下修且估值降温，可复核第二笔。"
+        },
+        {
+          "id": "csi500_dd30",
+          "label": "深度回撤",
+          "at_or_above_pct": 30,
+          "action": "重估电子、电力设备和医药等主要行业盈利后再决定第三笔。"
         }
       ]
     },
@@ -179,7 +244,13 @@
       "symbol": "510300.SS",
       "quote_code": "sh510300",
       "currency": "CNY",
-      "gate": "只有指数PE不高于12倍或十年估值分位不高于30%时才考虑；监控器不自动核验估值。",
+      "metric_source": {
+        "type": "index_valuation",
+        "name": "百分位",
+        "url": "https://baifenwei.com/index/hs300/",
+        "max_age_days": 5
+      },
+      "gate": "只有指数PE不高于12倍或十年估值分位不高于30%时才考虑；自动数据为日频历史口径。",
       "metric_gate_groups": [
         {
           "mode": "any",
@@ -309,13 +380,13 @@
       "symbol": "QQQ",
       "quote_code": "usQQQ",
       "currency": "USD",
-      "gate": "与NVDA合并计算科技仓；两者新增仓位合计不超过组合10%。",
+      "gate": "与NVDA合并计算科技仓；两者新增仓位合计不超过组合10%；不为1股单独下单，至少累计到2股再复核。",
       "price_levels": [
         {
           "id": "qqq_650",
           "label": "一级复核",
           "at_or_below": 650,
-          "action": "估值仍可能偏高，只考虑第一笔。"
+          "action": "估值仍可能偏高，只观察；与更深回撤或其他美元交易合并，累计至少2股再复核。"
         },
         {
           "id": "qqq_600",
@@ -335,13 +406,13 @@
           "id": "qqq_dd10",
           "label": "市场回撤第一档",
           "at_or_above_pct": 10,
-          "action": "可使用计划额度的25%，但保留现金底线。"
+          "action": "只进入观察，不因这一档单独买1股；等待更深回撤并累计至少2股的有效批次。"
         },
         {
           "id": "qqq_dd15",
           "label": "市场回撤第二档",
           "at_or_above_pct": 15,
-          "action": "可再使用计划额度的25%。"
+          "action": "检查指数前十大权重盈利预期；无明显下修时，才复核至少2股的第一批。"
         },
         {
           "id": "qqq_dd20",

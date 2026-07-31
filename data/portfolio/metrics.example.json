@@ -6,5 +6,9 @@
   "510300.SS": {
     "pe": 11.8,
     "valuation_percentile": 25
+  },
+  "510500.SS": {
+    "pe": 27.5,
+    "valuation_percentile": 32
   }
 }
