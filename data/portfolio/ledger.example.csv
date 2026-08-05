@@ -1,0 +1,5 @@
+event_id,datetime,type,account,counter_account,name,code,market,currency,counter_currency,quantity,price,fee,cash_amount,counter_amount,fx_to_cny,counter_fx_to_cny,reference_id,note
+OPEN-EXAMPLE-001,2026-01-01,OPEN_CASH,US,,,,,USD,,,,,10000,,7.20,,,示例期初美元现金
+BUY-EXAMPLE-001,2026-01-02,BUY,US,,QQQM,QQQM,US,USD,,10,200,0.35,,,7.18,,,示例买入
+DIVIDEND-EXAMPLE-001,2026-04-01,DIVIDEND,US,,QQQM,,,USD,,,,5.20,,7.10,,,示例分红
+SELL-EXAMPLE-001,2026-07-01,SELL,US,,QQQM,QQQM,US,USD,,4,230,0.35,,,6.90,,,示例卖出

@@ -206,6 +206,7 @@ AI Berkshire 确保：**同样的输入 → 结构一致、深度一致的输出
 | Skill | 用途 | 适合场景 |
 |-------|------|---------|
 | [`/income-investment`](skills/income-investment.md) | 收益型股票分析 | 区分可持续收益、机会型高息与收益率陷阱 |
+| [`/portfolio-book`](skills/portfolio-book.md) | 自然语言组合账本 | 记录买卖、现金、转仓并查询净值、成本、盈亏和历史 |
 | [`/portfolio-review`](skills/portfolio-review.md) | 组合管理与优化 | 从"研究公司"升级到"管理组合"——仓位、集中度、再平衡 |
 | [`/thesis-tracker`](skills/thesis-tracker.md) | 投资论文追踪 | 买入后的纪律系统：持续跟踪论文是否被证伪 |
 | [`/thesis-drift`](skills/thesis-drift.md) | 投资论文漂移检测 | 对比两份论文/报告，区分事实变化、估值变化与措辞变化 |
@@ -413,6 +414,88 @@ python3 tools/portfolio_monitor.py check \
 失败、过期或未配置，不表示“待补仓”。`metrics.example.json` 仅演示覆盖
 格式，不是实时数据。公共行情请求会发送观察标的代码；不希望发送代码时，
 可同时使用 `--prices-file` 和 `--no-auto-metrics`。
+
+### 5. 运行组合账本
+
+`portfolio_tracker.py` 继续负责兼容旧持仓 CSV；新增的
+`portfolio_book.py` 使用追加式交易账本作为真实数据源。买卖会自动改变对应
+币种现金，卖出后仍保留成交价和已实现盈亏，不再通过删除 CSV 行丢失历史。
+
+首次从现有持仓建立私有账本：
+
+```bash
+python3 tools/portfolio_book.py init \
+  --input "$HOME/Documents/投资表_数据表_表格.csv" \
+  --compat-output "$HOME/Documents/投资表_数据表_表格.csv"
+```
+
+真实账本默认保存在 Git 忽略的 `local/portfolio/ledger.csv`。初始化时设置
+`--compat-output` 后，每次录入交易都会同步更新原来的五列持仓 CSV。
+也可以在迁移完成后单独配置：
+
+```bash
+python3 tools/portfolio_book.py configure \
+  --compat-output "$HOME/Documents/投资表_数据表_表格.csv"
+```
+
+记录买卖、入金和分红：
+
+```bash
+# 买入会扣减 USD 现金并更新移动平均成本
+python3 tools/portfolio_book.py trade \
+  --side buy --account US --name QQQM --code QQQM \
+  --market US --currency USD --quantity 5 --price 300
+
+# 卖出会增加 USD 现金并计算已实现盈亏
+python3 tools/portfolio_book.py trade \
+  --side sell --account US --name QQQM --code QQQM \
+  --market US --currency USD --quantity 2 --price 320 \
+  --fee 0.35 --fx-to-cny 6.75
+
+python3 tools/portfolio_book.py cash \
+  --type deposit --account CN --currency CNY \
+  --amount 10000
+
+python3 tools/portfolio_book.py cash \
+  --type dividend --account US --currency USD \
+  --name QQQM --amount 3.20
+```
+
+当日 CNY、USD、HKD 事件不填 `--fx-to-cny` 时会自动获取并核验汇率；补录
+历史交易时必须提供交易日汇率，避免拿今天的汇率改写历史盈亏。
+
+场外基金只知道最终净回款时，可用 `--net-amount` 代替精确成交价。跨账户
+同币种划转使用 `transfer`，换汇使用 `fx`。录错后不要直接改历史行，用
+`void --event-id ... --note ...` 追加冲销标记。
+
+证券从一个券商原股转入另一个券商时，使用转仓命令保留原始成本：
+
+```bash
+python3 tools/portfolio_book.py position-transfer \
+  --from-account TIGER --to-account IBKR \
+  --name 腾讯 --code 00700 --market HK --currency HKD \
+  --quantity 200 --fee 500 --fx-to-cny 0.86
+```
+
+更新实时行情、汇率和每日净值：
+
+```bash
+python3 tools/portfolio_book.py update
+python3 tools/portfolio_book.py show
+python3 tools/portfolio_book.py history --trades-only
+```
+
+`update` 会输出并保存：
+
+- 组合净资产、累计净投入、总盈亏和总盈亏率；
+- 已实现盈亏、未实现盈亏、分红与利息；
+- CNY、HKD、USD 分币种现金池；
+- 现金加 SGOV/货币 ETF 构成的可调配资金池；
+- `local/portfolio/nav_history.csv` 中按日维护的净值历史；
+- `local/portfolio/valuation_latest.csv` 中的最新持仓估值。
+
+行情或汇率缺失时，程序会把估值标记为不完整，并停止计算完整净资产和总
+盈亏，避免用部分资产得出错误结论。
 
 ---
 

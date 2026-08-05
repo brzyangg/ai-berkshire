@@ -1,0 +1,4 @@
+interface:
+  display_name: "组合账本管理"
+  short_description: "用自然语言记录交易，并查看组合净值、现金、成本、盈亏和历史"
+  default_prompt: "使用 $portfolio-book 根据我的自然语言描述更新组合账本，或汇总当前持仓、现金、净值和盈亏。"

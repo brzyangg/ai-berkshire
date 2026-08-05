@@ -40,6 +40,27 @@ This skill is generated from `skills/portfolio-review.md` so Claude Code and Cod
 
 ### 第一步：解析持仓
 
+#### 本地账本优先
+
+如果存在 `local/portfolio/ledger.csv`，它是持仓数量、平均成本、账户、现金和
+交易历史的事实源。先运行：
+
+```bash
+python3 tools/portfolio_book.py update
+python3 tools/portfolio_book.py show
+```
+
+然后读取：
+
+- `local/portfolio/summary_latest.json`：净资产、总盈亏、已实现/未实现盈亏和资金池；
+- `local/portfolio/valuation_latest.csv`：当前持仓、成本、现价、市值、权重和盈亏；
+- `local/portfolio/nav_history.csv`：历史净值；
+- `local/portfolio/ledger.csv` 或 `portfolio_book.py history`：交易与资金来源。
+
+账本存在时，不得使用旧的 `reports/portfolio-latest.md` 或 Documents CSV 覆盖
+账本数据。联网刷新失败时可以使用最近快照，但必须标明快照时间和 `STALE`，不得
+据此给出精确调仓数量。只有账本不存在时，才按下面的输入格式和旧组合文件回退。
+
 从输入中解析出当前持仓，标准化为以下格式：
 
 | 标的 | 代码 | 持仓量 | 成本价 | 现价 | 市值 | 占比 | 盈亏 |
@@ -47,7 +68,8 @@ This skill is generated from `skills/portfolio-review.md` so Claude Code and Cod
 
 如果输入只有比例没有金额，按比例分析即可。
 
-同时检查是否存在已有的组合文件（`reports/portfolio-latest.md`），如有则读取并更新。
+账本不存在时，检查是否存在已有的组合文件（`reports/portfolio-latest.md`），
+如有则读取并更新。
 
 ### 第二步：获取最新数据
 
